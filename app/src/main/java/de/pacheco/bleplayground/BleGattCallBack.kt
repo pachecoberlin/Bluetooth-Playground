@@ -4,8 +4,9 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import java.util.*
 
-class BleGattCallBack : BluetoothGattCallback() {
+class BleGattCallBack(val bleGattActivity: BleGattActivity) : BluetoothGattCallback() {
     override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
         LogHelper.printIt("onCharacteristicChanged")
     }
@@ -20,6 +21,7 @@ class BleGattCallBack : BluetoothGattCallback() {
 
     override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
         LogHelper.printIt("onConnectionStateChange")
+        gatt?.discoverServices()
     }
 
     override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
@@ -52,5 +54,7 @@ class BleGattCallBack : BluetoothGattCallback() {
 
     override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
         LogHelper.printIt("onServicesDiscovered")
+        bleGattActivity.showServices(gatt?.services ?: LinkedList())
+        TODO("gatt.services is empty")
     }
 }

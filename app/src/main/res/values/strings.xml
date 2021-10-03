@@ -3,4 +3,8 @@
     <string name="start_scan">Start Scan</string>
     <string name="stop_scan">Stop Scan</string>
     <string name="signal_strength">%d dBm</string>
+    <string name="mac_address">MAC Address: </string>
+    <string name="connect">Connect</string>
+    <string name="isConnected">disconnected</string>
+    <string name="data">Data: </string>
 </resources>

@@ -29,7 +29,7 @@ import timber.log.Timber
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
 private const val SCAN_PERIOD = 10000L
-private const val SCAN_RESULT = "SCAN_RESULT"
+const val SCAN_RESULT = "SCAN_RESULT"
 
 class BleMainActivity : Activity() {
     private val bluetoothAdapter by lazy { (getSystemService(BLUETOOTH_SERVICE) as BluetoothManager).adapter }
