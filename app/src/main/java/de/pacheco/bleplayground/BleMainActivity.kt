@@ -52,15 +52,9 @@ class BleMainActivity : Activity() {
     }
 
     private fun updateScanButton(menu: Menu) {
-        if (!isScanning) {
-            menu.findItem(R.id.menu_stop).isVisible = false
-            menu.findItem(R.id.menu_scan).isVisible = true
-            menu.findItem(R.id.menu_refresh).actionView = null
-        } else {
-            menu.findItem(R.id.menu_stop).isVisible = true
-            menu.findItem(R.id.menu_scan).isVisible = false
-            menu.findItem(R.id.menu_refresh).setActionView(R.layout.scanning_progress_loop)
-        }
+        menu.findItem(R.id.menu_stop_scan).isVisible = isScanning
+        menu.findItem(R.id.menu_start_scan).isVisible = !isScanning
+        if (isScanning) menu.findItem(R.id.menu_working).setActionView(R.layout.scanning_progress_loop) else menu.findItem(R.id.menu_working).actionView = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,8 +77,8 @@ class BleMainActivity : Activity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_scan -> startScanning()
-            R.id.menu_stop -> stopScanning()
+            R.id.menu_start_scan -> startScanning()
+            R.id.menu_stop_scan -> stopScanning()
         }
         return true
     }

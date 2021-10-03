@@ -3,21 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <item
-        android:id="@+id/menu_refresh"
+        android:id="@+id/menu_working"
         android:checkable="false"
         android:orderInCategory="1"
         android:showAsAction="ifRoom"
         app:showAsAction="ifRoom"
         tools:ignore="AppCompatResource,MenuTitle" />
     <item
-        android:id="@+id/menu_scan"
+        android:id="@+id/menu_start_scan"
         android:orderInCategory="2"
         android:title="@string/start_scan"
         android:showAsAction="ifRoom|withText"
         app:showAsAction="ifRoom|withText"
         tools:ignore="AppCompatResource" />
     <item
-        android:id="@+id/menu_stop"
+        android:id="@+id/menu_stop_scan"
         android:orderInCategory="3"
         android:title="@string/stop_scan"
         android:showAsAction="ifRoom|withText"
