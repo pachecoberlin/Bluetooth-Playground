@@ -15,17 +15,21 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import de.pacheco.bleplayground.LogHelper.Companion.discoverDevice
 import de.pacheco.bleplayground.databinding.BleActivityMainBinding
 import timber.log.Timber
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
 private const val SCAN_PERIOD = 10000L
+private const val SCAN_RESULT = "SCAN_RESULT"
 
 class BleMainActivity : Activity() {
     private val bluetoothAdapter by lazy { (getSystemService(BLUETOOTH_SERVICE) as BluetoothManager).adapter }
@@ -41,13 +45,10 @@ class BleMainActivity : Activity() {
     private val scanResults = mutableListOf<ScanResult>()
     private val scanResultAdapter: ScanResultAdapter by lazy {
         ScanResultAdapter(scanResults) { result ->
-            if (isScanning) {
-                stopScanning()
-            }
-            with(result.device) {
-                Timber.w("Connecting to $address")
-//               TODO connect
-            }
+            stopScanning()
+            val intent = Intent(this, BleGattActivity::class.java)
+            intent.putExtra(SCAN_RESULT, result)
+            startActivity(intent)
         }
     }
 
@@ -71,7 +72,7 @@ class BleMainActivity : Activity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_ble_main, menu)
         optionsMenu = menu
-        updateScanButton(menu)
+        startScanning()
         return true
     }
 
@@ -84,8 +85,9 @@ class BleMainActivity : Activity() {
     }
 
     private fun startScanning() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isLocationPermissionGranted) {
-            requestLocationPermission()
+        requestLocationPermission()
+        enableBluetooth()
+        if (!bluetoothAdapter.isEnabled || !isLocationPermissionGranted) {
             return
         }
         mainLooperHandler.postDelayed({
@@ -99,6 +101,7 @@ class BleMainActivity : Activity() {
     }
 
     private fun stopScanning() {
+        if (!isScanning) return
         isScanning = false
         bleScanner.stopScan(scanCallback)
     }
@@ -106,13 +109,11 @@ class BleMainActivity : Activity() {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val indexQuery = scanResults.indexOfFirst { it.device.address == result.device.address }
-            if (indexQuery != -1) { // A scan result already exists with the same address
+            if (indexQuery != -1) {
                 scanResults[indexQuery] = result
                 scanResultAdapter.notifyItemChanged(indexQuery)
             } else {
-                with(result.device) {
-                    Timber.i("Found BLE device! Name: ${name ?: "Unnamed"}, address: $address")
-                }
+                result.device.run { Timber.i("New Device\nname: ${name ?: "unknown"}\naddress: $address") }
                 scanResults.add(result)
                 discoverDevice(result)
                 scanResultAdapter.notifyItemInserted(scanResults.size - 1)
@@ -124,15 +125,7 @@ class BleMainActivity : Activity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-//       TODO need of ConnectionListener?
-        if (!bluetoothAdapter.isEnabled) {
-            promptEnableBluetooth()
-        }
-    }
-
-    private fun promptEnableBluetooth() {
+    private fun enableBluetooth() {
         if (!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST_CODE)
@@ -141,25 +134,15 @@ class BleMainActivity : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            ENABLE_BLUETOOTH_REQUEST_CODE -> {
-                if (resultCode != RESULT_OK) {
-                    promptEnableBluetooth()
-                }
-            }
+        if (requestCode == ENABLE_BLUETOOTH_REQUEST_CODE && resultCode != RESULT_OK) {
+            Toast.makeText(this, "Without Bluetooth no playing with Bluetooth ;)", LENGTH_LONG).show()
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                if (grantResults.firstOrNull() == PackageManager.PERMISSION_DENIED) {
-                    requestLocationPermission()
-                } else {
-                    startScanning()
-                }
-            }
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            startScanning()
         }
     }
 
@@ -183,7 +166,7 @@ class BleMainActivity : Activity() {
     }
 
     private val isLocationPermissionGranted
-        get() = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        get() = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) || Build.VERSION.SDK_INT < Build.VERSION_CODES.M
 
     private fun Context.hasPermission(permissionType: String): Boolean {
         return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
@@ -192,6 +175,4 @@ class BleMainActivity : Activity() {
     private fun Activity.requestPermission(permission: String, requestCode: Int) {
         ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
     }
-
-    private val gattCallback: BluetoothGattCallback = BleGattCallBack()
 }
