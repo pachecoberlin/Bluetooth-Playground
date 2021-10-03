@@ -25,10 +25,11 @@ class ScanResultAdapter(private val scanResults: List<ScanResult>, private val o
         RecyclerView.ViewHolder(scanResultBinding.root) {
 
         fun bind(result: ScanResult) {
+            scanResultBinding.root.setOnClickListener { onClickListener.invoke(result) }
             scanResultBinding.deviceName.text = result.device.name ?: "No Device Name"
             scanResultBinding.macAddress.text = result.device.address
             scanResultBinding.signalStrength.text = itemView.context.getString(R.string.signal_strength, result.rssi)
-            scanResultBinding.root.setOnClickListener { onClickListener.invoke(result) }
+            scanResultBinding.scanResultInfos.text=result.toString()
         }
     }
 }
